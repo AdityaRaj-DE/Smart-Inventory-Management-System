@@ -1,6 +1,6 @@
 # 🧠 Smart Inventory Management System
 
-🔗 **Live Demo:** https://inventory-app-bzxa.vercel.app/
+🔗 **Live Demo:** Comming Soon
 
 A full-stack Inventory Management System built with **Next.js (App Router)**, **PostgreSQL**, and **Prisma**, featuring **role-based access control**, **stock tracking**, and **AI-powered reporting**.
 
