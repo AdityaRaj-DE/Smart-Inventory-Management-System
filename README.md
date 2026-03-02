@@ -164,8 +164,8 @@ name, quantity, price, categoryId, supplierId
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/AdityaRaj-DE/inventory_app.git
-cd inventory_app
+git clone https://github.com/AdityaRaj-DE/Smart-Inventory-Management-System.git
+cd Smart-Inventory-Management-System
 ```
 
 ### 2. Install Dependencies
