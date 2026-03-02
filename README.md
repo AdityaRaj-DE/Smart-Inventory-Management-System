@@ -164,7 +164,7 @@ name, quantity, price, categoryId, supplierId
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/shreyapandey-ai/inventory_app.git
+git clone https://github.com/AdityaRaj-DE/inventory_app.git
 cd inventory_app
 ```
 
