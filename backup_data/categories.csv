@@ -1,0 +1,21 @@
+id,name,isActive,createdAt
+c1,Category 1,true,2025-01-01T23:30:26.794Z
+c2,Category 2,true,2024-04-01T22:31:11.792Z
+c3,Category 3,true,2024-10-30T06:02:03.947Z
+c4,Category 4,true,2025-11-01T08:36:28.118Z
+c5,Category 5,true,2025-12-21T00:16:28.264Z
+c6,Category 6,true,2024-09-07T01:31:41.490Z
+c7,Category 7,true,2024-12-27T09:53:15.916Z
+c8,Category 8,true,2024-09-14T11:39:37.890Z
+c9,Category 9,true,2024-07-23T13:11:41.399Z
+c10,Category 10,true,2025-11-18T22:08:49.091Z
+c11,Category 11,true,2024-11-12T10:18:20.358Z
+c12,Category 12,true,2024-05-30T23:27:56.490Z
+c13,Category 13,true,2026-02-26T17:56:21.738Z
+c14,Category 14,true,2024-08-18T16:02:12.681Z
+c15,Category 15,true,2024-08-29T15:24:52.217Z
+c16,Category 16,true,2024-06-28T02:44:02.799Z
+c17,Category 17,true,2024-04-22T14:28:37.860Z
+c18,Category 18,true,2025-06-19T00:54:57.549Z
+c19,Category 19,true,2025-10-25T07:41:23.977Z
+c20,Category 20,true,2025-09-01T20:14:47.904Z

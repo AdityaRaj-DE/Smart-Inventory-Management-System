@@ -7,27 +7,32 @@ export const runtime = "nodejs";
 export async function POST() {
   try {
     const products = await prisma.product.findMany({
-      include: { category: true, supplier: true },
+      include: { category: true, supplier: true, inventories: true },
     });
 
     if (!products.length) {
       return NextResponse.json({ error: "No products found" }, { status: 400 });
     }
 
-    // Strict Classification
-    const lowStock = products.filter(p => p.quantity <= 10);
-    const overStock = products.filter(p => p.quantity > 100);
-    const healthyStock = products.filter(p => p.quantity > 10 && p.quantity <= 100);
+    const productsWithStock = products.map((p) => {
+        const totalStock = p.inventories?.reduce((acc, inv) => acc + inv.quantity, 0) || 0;
+        return { ...p, totalStock };
+    });
 
-    const totalValue = products.reduce(
-      (acc, p) => acc + p.quantity * p.price,
+    // Strict Classification
+    const lowStock = productsWithStock.filter(p => p.totalStock <= 10);
+    const overStock = productsWithStock.filter(p => p.totalStock > 100);
+    const healthyStock = productsWithStock.filter(p => p.totalStock > 10 && p.totalStock <= 100);
+
+    const totalValue = productsWithStock.reduce(
+      (acc, p) => acc + p.totalStock * p.basePrice,
       0
     );
 
-    const detailedData = products
+    const detailedData = productsWithStock
       .map(
         p =>
-          `${p.name} | Qty: ${p.quantity} | Price: ${p.price} | Category: ${p.category?.name} | Supplier: ${p.supplier?.name}`
+          `${p.name} | Qty: ${p.totalStock} | Price: ${p.basePrice} | Category: ${p.category?.name} | Supplier: ${p.supplier?.name}`
       )
       .join("\n");
 

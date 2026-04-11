@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock } from "lucide-react";
+import { User, Mail, Lock } from "lucide-react";
 
 export default function RegisterPage() {
     const router = useRouter();
 
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -32,7 +33,7 @@ export default function RegisterPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ name, email, password }),
             });
 
             const data = await res.json();
@@ -85,6 +86,17 @@ export default function RegisterPage() {
                             {error}
                         </p>
                     )}
+
+                    <div className="relative mb-4">
+                        <User className="absolute left-3 top-3.5 text-slate-400 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder="Full name"
+                            className="w-full pl-10 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none"
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
 
                     <div className="relative mb-4">
                         <Mail className="absolute left-3 top-3.5 text-slate-400 w-5 h-5" />

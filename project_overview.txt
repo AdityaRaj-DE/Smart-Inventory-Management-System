@@ -1,0 +1,89 @@
+# Smart Inventory Management System - Project Overview
+
+## 1. Current Whole Working and Features
+This is a full-stack, AI-powered Inventory Management System. It allows users to track products, manage stock levels across warehouses, handle orders, and generate intelligent reports.
+
+**Core Features:**
+- **Authentication & Authorization (RBAC):** Secure login using JWT and HTTP-only cookies. It supports Role-Based Access Control distinguishing between `ADMIN` (full access, can manage users, settings, bulk uploads) and `MANAGER` (read/write access to daily operations like stock movements and orders).
+- **Product Management:** Complete CRUD operations for products. Products are linked to specific Categories and Suppliers. It supports handling variants (e.g., sizes, colors) via the `ProductVariant` model and tracks `PriceHistory`.
+- **Inventory & Multi-Warehouse Tracking:** Real-time stock tracking across multiple warehouses. It keeps an eye on total quantity, reserved quantity, and damaged stock. It supports alerts for "low stock levels".
+- **Advanced Order System:** 
+  - *Purchase Orders:* For buying stock from Suppliers.
+  - *Sales Orders:* For selling stock to Customers.
+- **Stock Movement System:** Every change in inventory (Sale, Purchase, Adjustment, Return, Damage) is permanently recorded in a `StockMovement` ledger for full traceability.
+- **Auditing:** Every significant user action is tracked in the `AuditLog`.
+- **Analytics & AI Features:**
+  - Visual dashboards for stock distribution, sales, and low-stock items.
+  - AI-powered chat and report generation integrated via API routes (`/api/ai/...`).
+- **Export & Notifications:** Ability to export data (PDF generation) and send email notifications. Bulk upload capabilities via CSV are also supported.
+
+---
+
+## 2. How All the Things are Connected (Architecture & Flow)
+The application follows a standard Next.js App Router architecture connecting to a PostgreSQL database via Prisma ORM.
+
+**Data Flow & Connections:**
+1. **Users & Auth:** A user logs in. The system checks `role` (Admin/Manager). JWT tokens are used to protect Next.js routes and API endpoints.
+2. **Catalog Linking:** A `Product` is the central entity. It *must* belong to a `Category` and *can* be linked to a `Supplier`. 
+3. **Inventory Management:** The `Inventory` model operates as a junction between `Product` and `Warehouse`. It tracks exactly how many units of a specific product are in a specific warehouse.
+4. **Order Lifecycle:** 
+   - When a `SalesOrder` is created and fulfilled, a `StockMovement` of type `SALE` is generated, and the corresponding `Inventory` quantity decreases.
+   - When a `PurchaseOrder` is completed, a `StockMovement` of type `PURCHASE` is generated, and the corresponding `Inventory` quantity increases.
+5. **AI Interaction:** The Next.js API layer routes (`/api/ai/chat` and `/api/ai/report`) receive prompts, fetch current DB context via Prisma, and send this data to an AI model (like Google Gemini) to return human-readable insights.
+
+---
+
+## 3. What is Used (Tech Stack & Libraries)
+**Frontend:**
+- **Framework:** Next.js 16 (App Router) with React 19.
+- **Styling:** TailwindCSS for utility-first styling.
+- **UI Components:** Radix UI primitives (Dialog, Dropdown, Slot) and Lucide React for icons.
+- **Animations:** Framer Motion for smooth UI transitions and `tailwindcss-animate`.
+- **Charts:** Recharts and Chart.js for building the analytics dashboard.
+
+**Backend & Database:**
+- **Server:** Node.js environment via Next.js API Routes.
+- **Database:** PostgreSQL.
+- **ORM:** Prisma Client (v6.19) for type-safe database queries and schema management.
+- **Authentication:** `jsonwebtoken` (JWT) and `bcrypt` for password hashing; `jose` for edge-compatible token verification.
+
+**Utilities:**
+- **PDF Generation:** `pdf-lib` and `pdfkit` for generating downloadable reports.
+- **Emails:** `nodemailer` for system notifications.
+- **Task Scheduling:** `node-cron` for running background jobs (e.g., daily reports or low stock checks).
+- **Data parsing:** `csv-parse` for the bulk upload feature.
+
+---
+
+## 4. Current File and Folder Structure
+The codebase follows Next.js App Router conventions:
+
+```
+inventory_app-main/
+│
+├── app/                  # Next.js App Router (Frontend Pages & Backend API)
+│   ├── api/              # Backend API routes
+│   │   └── ai/           # AI feature endpoints (chat, report)
+│   ├── (auth)/           # Authentication pages (login)
+│   ├── dashboard/        # Main application dashboard and views
+│   └── globals.css       # Global stylesheet (Tailwind imports)
+│
+├── components/           # Reusable React components
+│   ├── ui/               # Base UI components (buttons, dialogs, dropdowns)
+│   └── ...               # Feature-specific components (charts, forms)
+│
+├── lib/                  # Core utilities and shared logic
+│   ├── auth.ts           # Authentication logic, JWT verification
+│   └── prisma.ts         # Prisma client initialization
+│
+├── prisma/               # Database Configuration
+│   ├── schema.prisma     # The single source of truth for the DB schema
+│   └── migrations/       # SQL migration history
+│
+├── public/               # Static assets (images, fonts)
+│
+├── .env                  # Environment variables (DB URL, Secrets)
+├── package.json          # Project dependencies and scripts
+├── tailwind.config.ts    # Tailwind CSS configuration
+└── next.config.ts        # Next.js configuration settings
+```

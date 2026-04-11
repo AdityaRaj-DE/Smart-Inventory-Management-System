@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Lock } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
     const router = useRouter();
-
+    const { setRole } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -25,13 +26,16 @@ export default function LoginPage() {
                 body: JSON.stringify({ email, password }),
             });
 
-            const data = await res.json();
+            const response = await res.json();
 
-            if (!res.ok) throw new Error(data.error);
+            if (!res.ok) throw new Error(response.error);
 
-            if (data.role === "ADMIN") router.push("/dashboard");
-            else router.push("/manager");
+            const role = response.data.role;
 
+            localStorage.setItem("role", role);
+            setRole(role);
+
+            router.push("/dashboard");
             router.refresh();
         } catch {
             setError("Invalid credentials");
@@ -45,7 +49,7 @@ export default function LoginPage() {
 
             {/* LEFT */}
             <div className="hidden md:flex flex-col justify-center px-16 bg-gradient-to-br from-teal-600 to-cyan-500 text-white relative overflow-hidden">
-                
+
                 {/* subtle glow */}
                 <div className="absolute w-72 h-72 bg-white/10 rounded-full blur-3xl top-10 left-10" />
 

@@ -16,7 +16,12 @@ export async function POST(req: Request) {
 
     // 🔹 Fetch inventory data
     const products = await prisma.product.findMany({
-      include: { category: true, supplier: true },
+      include: { category: true, supplier: true, inventories: true },
+    });
+
+    const productsWithStock = products.map((p) => {
+        const totalStock = p.inventories?.reduce((acc, inv) => acc + inv.quantity, 0) || 0;
+        return { ...p, totalStock };
     });
 
     if (!products.length) {
@@ -26,24 +31,25 @@ export async function POST(req: Request) {
     }
 
     // 🔹 Strict stock classification
-    const lowStockProducts = products.filter(p => p.quantity <= 10);
-    const overStockProducts = products.filter(p => p.quantity > 100);
-    const healthyProducts = products.filter(
-      p => p.quantity > 10 && p.quantity <= 100
+    const lowStockProducts = productsWithStock.filter(p => p.totalStock <= 10);
+    const overStockProducts = productsWithStock.filter(p => p.totalStock > 100);
+    const healthyProducts = productsWithStock.filter(
+      p => p.totalStock > 10 && p.totalStock <= 100
     );
 
-    const totalValue = products.reduce(
-      (acc, p) => acc + p.quantity * p.price,
+    const totalValue = productsWithStock.reduce(
+      (acc, p) => acc + p.totalStock * p.basePrice,
       0
     );
 
     // 🔹 Clean inventory summary (no special chars)
-    const inventorySummary = products
+    const inventorySummary = productsWithStock
       .map(
         p =>
-          `${p.name} | Qty: ${p.quantity} | Price: ${p.price} | Category: ${p.category?.name || "N/A"} | Supplier: ${p.supplier?.name || "N/A"}`
+          `${p.name} | Qty: ${p.totalStock} | Price: ${p.basePrice} | Category: ${p.category?.name || "N/A"} | Supplier: ${p.supplier?.name || "N/A"}`
       )
       .join("\n");
+
 
     // 🔥 Strongly Controlled Prompt
     const prompt = `

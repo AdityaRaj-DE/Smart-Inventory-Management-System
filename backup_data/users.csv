@@ -1,0 +1,11 @@
+id,email,password,name,role,isActive,createdAt,updatedAt
+u1,user1@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Danny Hodkiewicz,ADMIN,true,2026-01-09T01:11:41.617Z,2026-02-18T23:04:02.840Z
+u2,user2@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Dr. Jonathon Sauer,MANAGER,true,2025-04-08T23:41:56.026Z,2026-02-19T12:16:23.192Z
+u3,user3@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Abraham Flatley,MANAGER,true,2025-01-08T04:43:02.271Z,2025-07-07T20:48:52.825Z
+u4,user4@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Lauren Rau,MANAGER,true,2025-11-16T20:49:37.673Z,2025-06-03T07:18:01.396Z
+u5,user5@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Loretta Prosacco,MANAGER,true,2025-02-12T01:04:04.775Z,2025-04-18T13:06:33.313Z
+u6,user6@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Leroy Satterfield,MANAGER,true,2024-08-03T19:01:53.138Z,2024-10-25T17:48:03.915Z
+u7,user7@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Douglas Stehr,MANAGER,true,2025-12-07T09:27:27.001Z,2025-06-06T01:48:54.792Z
+u8,user8@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Berenice Hammes PhD,MANAGER,true,2024-11-19T07:46:28.391Z,2025-03-17T17:00:31.182Z
+u9,user9@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Antonette Baumbach,MANAGER,true,2024-07-28T01:10:13.415Z,2025-03-15T10:34:05.892Z
+u10,user10@test.com,$2b$10$asrSXXUbeDa4ulcRta67Yu0wq2tU7dp8rt6kC36e79iuxQFLzju.C,Mr. Benny Beier DDS,MANAGER,true,2024-12-27T14:35:47.236Z,2025-02-17T11:24:13.885Z

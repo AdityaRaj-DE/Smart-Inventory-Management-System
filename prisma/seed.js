@@ -10,24 +10,34 @@ async function main() {
   const adminPassword = await bcrypt.hash("admin123", 10);
   const managerPassword = await bcrypt.hash("manager123", 10);
 
-  await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email: "admin@inventory.com" },
     update: {},
     create: {
+      name: "Admin User",
       email: "admin@inventory.com",
       password: adminPassword,
       role: Role.ADMIN,
     },
   });
 
-  await prisma.user.upsert({
+  const manager = await prisma.user.upsert({
     where: { email: "manager@inventory.com" },
     update: {},
     create: {
+      name: "Manager User",
       email: "manager@inventory.com",
       password: managerPassword,
       role: Role.MANAGER,
     },
+  });
+
+  // ================= WAREHOUSES =================
+  const mainWarehouse = await prisma.warehouse.create({
+    data: {
+      name: "Main Warehouse",
+      location: "Central Hub",
+    }
   });
 
   // ================= CATEGORIES =================
@@ -105,18 +115,28 @@ async function main() {
       create: {
         name: p.name,
         sku: p.sku,
-        price: p.price,
-        quantity: p.qty,
+        basePrice: p.price,
         categoryId: categories[p.cat].id,
         supplierId: suppliers[p.sup].id,
       },
     });
 
+    await prisma.inventory.create({
+      data: {
+        productId: product.id,
+        warehouseId: mainWarehouse.id,
+        quantity: p.qty,
+        lastRestockedAt: new Date(),
+      }
+    });
+
     await prisma.stockMovement.create({
       data: {
         productId: product.id,
-        type: MovementType.RESTOCK,
+        warehouseId: mainWarehouse.id,
+        type: MovementType.PURCHASE,
         quantity: p.qty,
+        performedBy: admin.id,
         note: "Initial stock added",
       },
     });

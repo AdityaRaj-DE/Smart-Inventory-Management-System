@@ -1,88 +1,120 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/authGuard";
+import { logAction } from "@/lib/audit";
 
-// UPDATE
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params; // ✅ FIX
-    const body = await req.json();
-
-    const updated = await prisma.product.update({
-      where: { id },
-      data: body,
-    });
-
-    return NextResponse.json(updated);
-
-  } catch (err) {
-    return NextResponse.json(
-      { error: "Update failed" },
-      { status: 500 }
-    );
-  }
-}
-
-
-// DELETE
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> } // ✅ FIX
-) {
-  const { id } = await params; // ✅ VERY IMPORTANT
-
-  if (!id) {
-    return NextResponse.json(
-      { error: "Invalid ID" },
-      { status: 400 }
-    );
-  }
-
-  await prisma.product.delete({
-    where: { id },
-  });
-
-  return NextResponse.json({ message: "Deleted" });
-}
-
-
+// GET SINGLE PRODUCT
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } },
 ) {
-  try {
-    const { id } = await params; // ✅ FIX
+  await requireAuth();
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid ID" },
-        { status: 400 }
-      );
-    }
-
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        stockMovements: true,
+  const product = await prisma.product.findUnique({
+    where: { id: params.id },
+    include: {
+      category: true,
+      supplier: true,
+      variants: true,
+      priceHistory: true,
+      inventories: {
+        include: {
+          warehouse: true,
+        },
       },
-    });
+    },
+  });
 
-    if (!product) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
-    }
+  return NextResponse.json({
+    success: true,
+    data: product,
+  });
+}
 
-    return NextResponse.json(product);
+// UPDATE PRODUCT
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  const auth = await requireAuth("ADMIN");
 
-  } catch (err) {
-    console.error(err);
+  const body = await req.json();
+
+  const existing = await prisma.product.findUnique({
+    where: { id: params.id },
+  });
+
+  if (!existing) {
     return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
+      { success: false, error: "Product not found" },
+      { status: 404 },
     );
   }
+
+  const product = await prisma.product.update({
+    where: { id: params.id },
+    data: {
+      name: body.name,
+      description: body.description,
+      basePrice: body.basePrice,
+      categoryId: body.categoryId,
+      supplierId: body.supplierId,
+      isActive: body.isActive,
+    },
+  });
+
+  // if price changed → add history
+  if (body.basePrice && body.basePrice !== existing.basePrice) {
+    await prisma.priceHistory.updateMany({
+      where: {
+        productId: product.id,
+        endDate: null,
+      },
+      data: {
+        endDate: new Date(),
+      },
+    });
+    await prisma.priceHistory.create({
+      data: {
+        productId: product.id,
+        price: body.basePrice,
+      },
+    });
+  }
+
+  await logAction({
+    userId: auth.userId,
+    action: "UPDATE_PRODUCT",
+    entity: "Product",
+    entityId: product.id,
+  });
+
+  return NextResponse.json({
+    success: true,
+    data: product,
+  });
+}
+
+// SOFT DELETE PRODUCT
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  const auth = await requireAuth("ADMIN");
+
+  const product = await prisma.product.update({
+    where: { id: params.id },
+    data: { isActive: false },
+  });
+
+  await logAction({
+    userId: auth.userId,
+    action: "DELETE_PRODUCT",
+    entity: "Product",
+    entityId: product.id,
+  });
+
+  return NextResponse.json({
+    success: true,
+  });
 }

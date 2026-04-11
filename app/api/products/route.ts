@@ -1,86 +1,117 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/authGuard";
+import { logAction } from "@/lib/audit";
 
+
+// GET PRODUCTS
 export async function GET() {
-  try {
-    const products = await prisma.product.findMany({
-      include: {
-        category: true,
-        supplier: true,
-      },
-    });
+  await requireAuth();
 
-    return NextResponse.json(products);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch products" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-
-    // ✅ Required fields validation
-    if (!body.name || !body.categoryId || !body.supplierId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ Strict validation (DO NOT auto-correct)
-    if (body.quantity < 0) {
-      return NextResponse.json(
-        { error: "Quantity cannot be negative" },
-        { status: 400 }
-      );
-    }
-
-    if (body.price < 0) {
-      return NextResponse.json(
-        { error: "Price cannot be negative" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ Auto-generate SKU (REMOVE FROM FRONTEND)
-    const sku = `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    const product = await prisma.product.create({
-      data: {
-        name: body.name,
-        sku,
-        description: body.description || "",
-        quantity: Number(body.quantity),
-        price: Number(body.price),
-        categoryId: body.categoryId,
-        supplierId: body.supplierId,
-
-        // Initial stock entry
-        stockMovements: {
-          create: {
-            quantity: Number(body.quantity),
-            type: "RESTOCK",
-            note: "Initial stock",
-          },
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    include: {
+      category: true,
+      supplier: true,
+      _count: {
+        select: {
+          variants: true,
+          inventories: true,
         },
       },
-      include: {
-        stockMovements: true,
-      },
-    });
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    return NextResponse.json(product);
-  } catch (error: any) {
-    console.log(error);
-
-    return NextResponse.json(
-      { error: "Failed to create product" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    success: true,
+    data: products,
+  });
 }
 
+
+
+// CREATE PRODUCT
+export async function POST(req: Request) {
+  const auth = await requireAuth("ADMIN");
+
+  const body = await req.json();
+
+  if (!body.name || !body.sku || !body.categoryId || !body.basePrice) {
+    return NextResponse.json(
+      { success: false, error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
+
+  // check duplicate SKU
+  const existing = await prisma.product.findUnique({
+    where: { sku: body.sku },
+  });
+
+  if (existing) {
+    return NextResponse.json(
+      { success: false, error: "SKU already exists" },
+      { status: 400 }
+    );
+  }
+
+  // validate category
+  const category = await prisma.category.findUnique({
+    where: { id: body.categoryId },
+  });
+
+  if (!category) {
+    return NextResponse.json(
+      { success: false, error: "Invalid category" },
+      { status: 400 }
+    );
+  }
+
+  // validate supplier (optional)
+  if (body.supplierId) {
+    const supplier = await prisma.supplier.findUnique({
+      where: { id: body.supplierId },
+    });
+
+    if (!supplier) {
+      return NextResponse.json(
+        { success: false, error: "Invalid supplier" },
+        { status: 400 }
+      );
+    }
+  }
+
+  const product = await prisma.product.create({
+    data: {
+      name: body.name,
+      description: body.description,
+      sku: body.sku,
+      basePrice: body.basePrice,
+      unit: body.unit || "pcs",
+      currency: body.currency || "INR",
+      categoryId: body.categoryId,
+      supplierId: body.supplierId,
+    },
+  });
+
+  // create price history
+  await prisma.priceHistory.create({
+    data: {
+      productId: product.id,
+      price: body.basePrice,
+    },
+  });
+
+  await logAction({
+    userId: auth.userId,
+    action: "CREATE_PRODUCT",
+    entity: "Product",
+    entityId: product.id,
+  });
+
+  return NextResponse.json({
+    success: true,
+    data: product,
+  });
+}
